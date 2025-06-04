@@ -22,17 +22,19 @@ echo "✅ uxplay and ImageMagick installed."
 
 # 3) Configure uxplay to run on startup
 echo "[3/8] Creating uxplay autostart entry..."
+HOSTNAME=$(hostname)
+
 cat <<EOF > /etc/xdg/autostart/uxplay.desktop
 [Desktop Entry]
 Type=Application
-Exec=/bin/sh -c 'sleep 5 && uxplay'
+Exec=/bin/sh -c 'sleep 5 && uxplay --fullscreen --video-sink=autovideosink --name "$HOSTNAME"'
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 Name=UxPlay
 Comment=Start UxPlay AirPlay Receiver
 EOF
-echo "✅ uxplay will start automatically on login."
+echo "✅ uxplay will start automatically on login with hostname '$HOSTNAME'."
 
 # 4) Create user 'airplay' with password 'airplay'
 echo "[4/8] Creating user 'airplay'..."
