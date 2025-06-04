@@ -1,43 +1,63 @@
 #!/bin/bash
 
-# 0) Check for sudo/root
-echo "[0/8] Checking for root permissions..."
+# 🔐 0) Ask about AirPlay PIN authentication
+UXPIN=""
+read -rp "🔐 Require PIN authentication for AirPlay? (Y/N): " REQUIRE_PIN
+if [[ "$REQUIRE_PIN" =~ ^[Yy]$ ]]; then
+  read -rp "🔢 Use random PIN on each session? (Y/N, default Y): " RANDOM_PIN
+  if [[ "$RANDOM_PIN" =~ ^[Nn]$ ]]; then
+    while true; do
+      read -rp "📟 Enter 4-digit static PIN: " STATIC_PIN
+      if [[ "$STATIC_PIN" =~ ^[0-9]{4}$ ]]; then
+        UXPIN="-pin$STATIC_PIN"
+        break
+      else
+        echo "❌ Invalid PIN. Please enter exactly 4 digits (e.g. 1234)."
+      fi
+    done
+  else
+    UXPIN="-pin"
+  fi
+fi
+
+# 1) Check for sudo/root
+echo "[1/9] Checking for root permissions..."
 if [ "$(id -u)" -ne 0 ]; then
   echo "❌ This script must be run as root. Use sudo." >&2
   exit 1
 fi
 echo "✅ Running as root."
 
-# 1) Update package list
-echo "[1/8] Updating package list..."
+# 2) Update package list
+echo "[2/9] Updating package list..."
 apt-get update
 echo "✅ Package list updated."
 
-# 2) Install uxplay and imagemagick
-echo "[2/8] Installing uxplay and ImageMagick..."
+# 3) Install uxplay and dependencies
+echo "[3/9] Installing uxplay and dependencies..."
 apt-get install -y uxplay imagemagick \
   gstreamer1.0-plugins-bad gstreamer1.0-plugins-good \
   gstreamer1.0-plugins-ugly gstreamer1.0-libav
-echo "✅ uxplay and ImageMagick installed."
+echo "✅ uxplay and dependencies installed."
 
-# 3) Configure uxplay to run on startup
-echo "[3/8] Creating uxplay autostart entry..."
+# 4) Configure uxplay to run on startup
+echo "[4/9] Creating uxplay autostart entry..."
 HOSTNAME=$(hostname)
 
 cat <<EOF > /etc/xdg/autostart/uxplay.desktop
 [Desktop Entry]
 Type=Application
-Exec=/bin/sh -c 'sleep 5 && uxplay --fullscreen --video-sink=autovideosink --name "$HOSTNAME"'
+Exec=/bin/sh -c 'sleep 5 && uxplay --fullscreen --video-sink=autovideosink -n "$HOSTNAME" -nh $UXPIN'
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 Name=UxPlay
 Comment=Start UxPlay AirPlay Receiver
 EOF
-echo "✅ uxplay will start automatically on login with hostname '$HOSTNAME'."
+echo "✅ uxplay will start automatically on login with hostname '$HOSTNAME' and pin setting '$UXPIN'."
 
-# 4) Create user 'airplay' with password 'airplay'
-echo "[4/8] Creating user 'airplay'..."
+# 5) Create user 'airplay' with password 'airplay'
+echo "[5/9] Creating user 'airplay'..."
 if id "airplay" &>/dev/null; then
     echo "ℹ️ User 'airplay' already exists. Skipping creation."
 else
@@ -46,8 +66,8 @@ else
     echo "✅ User 'airplay' created with password 'airplay'."
 fi
 
-# 5) Set lightdm to auto-login as airplay
-echo "[5/8] Configuring LightDM autologin for 'airplay'..."
+# 6) Set lightdm to auto-login as airplay
+echo "[6/9] Configuring LightDM autologin for 'airplay'..."
 LIGHTDM_CONF="/etc/lightdm/lightdm.conf.d/50-airplay.conf"
 mkdir -p "$(dirname "$LIGHTDM_CONF")"
 cat <<EOF > "$LIGHTDM_CONF"
@@ -58,28 +78,16 @@ user-session=xubuntu
 EOF
 echo "✅ Autologin for 'airplay' configured."
 
-# 6) Hide all desktop icons for airplay user (Xfce specific)
-echo "[6/8] Hiding desktop icons for user 'airplay'..."
-sudo -u airplay mkdir -p /home/airplay/.config/xfce4/xfconf/xfce-perchannel-xml
-
-cat <<EOF > /home/airplay/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
-<?xml version="1.0" encoding="UTF-8"?>
-<channel name="xfce4-desktop" version="1.0">
-  <property name="desktop-icons" type="empty">
-    <property name="show-trash-icon" type="bool" value="false"/>
-    <property name="show-filesystem-icon" type="bool" value="false"/>
-    <property name="show-home-icon" type="bool" value="false"/>
-    <property name="show-removable-icon" type="bool" value="false"/>
-    <property name="show-network-icon" type="bool" value="false"/>
-  </property>
-</channel>
-EOF
-
-chown -R airplay:airplay /home/airplay/.config
+# 7) Hide all desktop icons for airplay user (Xfce specific)
+echo "[7/9] Hiding desktop icons for user 'airplay'..."
+sudo -u airplay xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -s false
+sudo -u airplay xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s false
+sudo -u airplay xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-removable -s false
+sudo -u airplay xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-volumes -s false
 echo "✅ Desktop icons hidden for 'airplay'."
 
-# 7) Set wallpaper (create placeholder image)
-echo "[7/8] Creating wallpaper image..."
+# 8) Set wallpaper (create placeholder image)
+echo "[8/9] Creating wallpaper image..."
 WALLPAPER_PATH="/home/airplay/Pictures/airplay_wallpaper.png"
 mkdir -p /home/airplay/Pictures
 
@@ -89,8 +97,8 @@ convert -size 1920x1080 xc:black -gravity center -pointsize 48 \
 chown airplay:airplay "$WALLPAPER_PATH"
 echo "✅ Wallpaper image created."
 
-# 8) Create autostart script to apply wallpaper at user login
-echo "[8/8] Creating autostart script to set wallpaper..."
+# 9) Create autostart script to apply wallpaper at user login
+echo "[9/9] Creating autostart script to set wallpaper..."
 
 sudo -u airplay mkdir -p /home/airplay/.config/autostart
 
