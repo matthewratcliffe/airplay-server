@@ -51,12 +51,12 @@ On reboot, the system will auto-login as the airplay user and automatically star
 ## 🔐 Security Note
 The user airplay is created with a default password (airplay). For production or public-facing devices, you should change this password:
 
-bash
-```
+```bash
 sudo passwd airplay
 ```
 
 ##🧹 To Uninstall
+
 Manual steps required:
 
 ```bash
