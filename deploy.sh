@@ -25,7 +25,7 @@ echo "[3/8] Creating uxplay autostart entry..."
 cat <<EOF > /etc/xdg/autostart/uxplay.desktop
 [Desktop Entry]
 Type=Application
-Exec=bash -c "sleep 5 && uxplay"
+Exec=/bin/sh -c 'sleep 5 && uxplay'
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
