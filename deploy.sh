@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# 0) No PIN authentication - removed
-
 # 1) Check for sudo/root
 echo "[1/9] Checking for root permissions..."
 if [ "$(id -u)" -ne 0 ]; then
