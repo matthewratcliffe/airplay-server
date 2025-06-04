@@ -15,7 +15,7 @@ echo "✅ Package list updated."
 
 # 2) Install uxplay and imagemagick
 echo "[2/8] Installing uxplay and ImageMagick..."
-apt-get install -y uxplay imagemagick
+apt-get install -y uxplay imagemagick gstreamer1.0-plugins-bad
 echo "✅ uxplay and ImageMagick installed."
 
 # 3) Configure uxplay to run on startup
