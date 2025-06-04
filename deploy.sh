@@ -29,7 +29,7 @@ HOSTNAME=$(hostname)
 cat <<EOF > /etc/xdg/autostart/uxplay.desktop
 [Desktop Entry]
 Type=Application
-Exec=/bin/sh -c 'sleep 5 && uxplay -fs -n "$HOSTNAME" -nh >> /tmp/airplay.log 2>&1'
+Exec=/bin/sh -c 'sleep 5 && uxplay -fs -n $HOSTNAME -nh >> /tmp/airplay.log 2>&1'
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
