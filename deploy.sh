@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# 0) Ask for AirPlay display name (default to hostname, replace hyphens with underscores)
+# 0) Ask for AirPlay display name (default to hostname)
 read -rp "🎛️ Enter AirPlay display name (default: system hostname): " AIRPLAY_NAME
 if [ -z "$AIRPLAY_NAME" ]; then
   AIRPLAY_NAME=$(hostname)
 fi
-AIRPLAY_NAME="${AIRPLAY_NAME//-/_}"
+# Replace hyphens and spaces with underscores
+AIRPLAY_NAME="${AIRPLAY_NAME//[- ]/_}"
 echo "ℹ️ AirPlay display name set to: $AIRPLAY_NAME"
 
 # 1) Check for sudo/root
