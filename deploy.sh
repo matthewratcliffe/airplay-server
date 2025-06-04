@@ -2,22 +2,19 @@
 
 # 🔐 0) Ask about AirPlay PIN authentication
 UXPIN=""
+PIN_DISPLAY=""
 read -rp "🔐 Require PIN authentication for AirPlay? (Y/N): " REQUIRE_PIN
 if [[ "$REQUIRE_PIN" =~ ^[Yy]$ ]]; then
-  read -rp "🔢 Use random PIN on each session? (Y/N, default Y): " RANDOM_PIN
-  if [[ "$RANDOM_PIN" =~ ^[Nn]$ ]]; then
-    while true; do
-      read -rp "📟 Enter 4-digit static PIN: " STATIC_PIN
-      if [[ "$STATIC_PIN" =~ ^[0-9]{4}$ ]]; then
-        UXPIN="-pin$STATIC_PIN"
-        break
-      else
-        echo "❌ Invalid PIN. Please enter exactly 4 digits (e.g. 1234)."
-      fi
-    done
-  else
-    UXPIN="-pin"
-  fi
+  while true; do
+    read -rp "📟 Enter 4-digit static PIN: " STATIC_PIN
+    if [[ "$STATIC_PIN" =~ ^[0-9]{4}$ ]]; then
+      UXPIN="-pin$STATIC_PIN"
+      PIN_DISPLAY="PIN $STATIC_PIN"
+      break
+    else
+      echo "❌ Invalid PIN. Please enter exactly 4 digits (e.g. 1234)."
+    fi
+  done
 fi
 
 # 1) Check for sudo/root
@@ -125,10 +122,12 @@ EOF
 chown airplay:airplay /home/airplay/.config/autostart/airplay-xfce-setup.desktop
 echo "✅ XFCE desktop config script will run on login."
 
-# 8) Create wallpaper image
+# 8) Create wallpaper image with PIN on second line
 echo "[8/9] Creating wallpaper image..."
 convert -size 1920x1080 xc:black -gravity center -pointsize 48 \
-  -fill white -annotate +0+0 "Airplay server enabled" "$WALLPAPER_PATH"
+  -fill white -annotate +0-20 "Airplay server enabled" \
+  -fill white -annotate +0+40 "$PIN_DISPLAY" \
+  "$WALLPAPER_PATH"
 chown airplay:airplay "$WALLPAPER_PATH"
 echo "✅ Wallpaper image created."
 
