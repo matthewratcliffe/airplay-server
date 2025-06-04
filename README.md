@@ -24,9 +24,9 @@ chmod +x deploy.sh
 ```
 3. Run the deployment script with sudo:
 ```bash
-sudo ./deploy.sh
+sudo bash deploy.sh
 ```
-⚠️ This script must be run as root (via sudo) or it will exit with an error.
+⚠️ This script must be run using bash (not sh) as root (via sudo) or it will exit with an error.
 
 ## 🛠️ What This Script Does
 - Verifies that it’s being run as root
