@@ -15,7 +15,9 @@ echo "✅ Package list updated."
 
 # 2) Install uxplay and imagemagick
 echo "[2/8] Installing uxplay and ImageMagick..."
-apt-get install -y uxplay imagemagick gstreamer1.0-plugins-bad
+apt-get install -y uxplay imagemagick \
+  gstreamer1.0-plugins-bad gstreamer1.0-plugins-good \
+  gstreamer1.0-plugins-ugly gstreamer1.0-libav
 echo "✅ uxplay and ImageMagick installed."
 
 # 3) Configure uxplay to run on startup
@@ -23,7 +25,7 @@ echo "[3/8] Creating uxplay autostart entry..."
 cat <<EOF > /etc/xdg/autostart/uxplay.desktop
 [Desktop Entry]
 Type=Application
-Exec=uxplay
+Exec=bash -c "sleep 5 && uxplay"
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
