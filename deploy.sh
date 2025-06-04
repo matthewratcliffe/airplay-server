@@ -47,7 +47,7 @@ HOSTNAME=$(hostname)
 cat <<EOF > /etc/xdg/autostart/uxplay.desktop
 [Desktop Entry]
 Type=Application
-Exec=/bin/sh -c 'sleep 5 && uxplay --fullscreen --video-sink=autovideosink -n "$HOSTNAME" -nh $UXPIN'
+Exec=/bin/sh -c 'sleep 5 && uxplay --fs -n "$HOSTNAME" -nh $UXPIN'
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
