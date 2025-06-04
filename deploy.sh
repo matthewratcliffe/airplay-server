@@ -13,10 +13,10 @@ echo "[1/8] Updating package list..."
 apt-get update
 echo "✅ Package list updated."
 
-# 2) Install uxplay
-echo "[2/8] Installing uxplay..."
-apt-get install -y uxplay
-echo "✅ uxplay installed."
+# 2) Install uxplay and imagemagick
+echo "[2/8] Installing uxplay and ImageMagick..."
+apt-get install -y uxplay imagemagick
+echo "✅ uxplay and ImageMagick installed."
 
 # 3) Configure uxplay to run on startup
 echo "[3/8] Creating uxplay autostart entry..."
@@ -56,7 +56,6 @@ echo "✅ Autologin for 'airplay' configured."
 
 # 6) Hide all desktop icons for airplay user (Xfce specific)
 echo "[6/8] Hiding desktop icons for user 'airplay'..."
-sudo -u airplay mkdir -p /home/airplay/.config/xfce4/desktop
 sudo -u airplay mkdir -p /home/airplay/.config/xfce4/xfconf/xfce-perchannel-xml
 
 cat <<EOF > /home/airplay/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
@@ -80,20 +79,37 @@ echo "[7/8] Creating wallpaper image..."
 WALLPAPER_PATH="/home/airplay/Pictures/airplay_wallpaper.png"
 mkdir -p /home/airplay/Pictures
 
-# Install ImageMagick if not already present
-echo "Installing ImageMagick (for wallpaper generation)..."
-apt-get install -y imagemagick
-
 convert -size 1920x1080 xc:black -gravity center -pointsize 48 \
     -fill white -annotate +0+0 "Airplay server enabled" "$WALLPAPER_PATH"
 
 chown airplay:airplay "$WALLPAPER_PATH"
 echo "✅ Wallpaper image created."
 
-# Apply wallpaper using xfconf
-echo "[8/8] Setting wallpaper via xfconf..."
-sudo -u airplay xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-path -s "$WALLPAPER_PATH"
-sudo -u airplay xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-style -s 3
-echo "✅ Wallpaper set."
+# 8) Create autostart script to apply wallpaper at user login
+echo "[8/8] Creating autostart script to set wallpaper..."
+
+sudo -u airplay mkdir -p /home/airplay/.config/autostart
+
+cat <<EOF > /home/airplay/.config/autostart/set-wallpaper.desktop
+[Desktop Entry]
+Type=Application
+Exec=/home/airplay/set-wallpaper.sh
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Set Wallpaper
+EOF
+
+cat <<EOF > /home/airplay/set-wallpaper.sh
+#!/bin/bash
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-path -s "$WALLPAPER_PATH"
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-style -s 3
+EOF
+
+chmod +x /home/airplay/set-wallpaper.sh
+chown airplay:airplay /home/airplay/set-wallpaper.sh
+chown -R airplay:airplay /home/airplay/.config/autostart
+
+echo "✅ Wallpaper will be applied on login via autostart script."
 
 echo "🎉 Setup complete! Please reboot to apply all changes."
