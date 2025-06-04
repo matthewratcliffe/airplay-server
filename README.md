@@ -55,7 +55,7 @@ The user airplay is created with a default password (airplay). For production or
 sudo passwd airplay
 ```
 
-##🧹 To Uninstall
+## 🧹 To Uninstall
 
 Manual steps required:
 
