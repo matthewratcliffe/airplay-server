@@ -2,6 +2,8 @@
 
 This project sets up an **AirPlay receiver** on a Xubuntu system using `uxplay`. It configures a dedicated user account, autologin, and a clean display environment tailored for AirPlay use.
 
+---
+
 ## 📋 Requirements
 
 - Xubuntu (tested on 22.04+)
@@ -12,52 +14,74 @@ This project sets up an **AirPlay receiver** on a Xubuntu system using `uxplay`.
 
 ## 🚀 Quick Start
 
-### 1. Open Terminal (Ctrl+Alt+T) and run:
+### 1. Clone the repository and enter the folder:
 
 ```bash
 git clone https://github.com/matthewratcliffe/airplay-server.git
 cd airplay-server
 ```
-2. Make the deployment script executable:
+
+### 2. Make the deployment script executable:
+
 ```bash
 chmod +x deploy.sh
 ```
-3. Run the deployment script with sudo:
+
+### 3. Run the deployment script with root privileges:
+
 ```bash
 sudo bash deploy.sh
 ```
-⚠️ This script must be run using bash (not sh) as root (via sudo) or it will exit with an error.
+
+> ⚠️ The script must be run using `bash` (not `sh`) with root (sudo) privileges, or it will exit with an error.
+
+---
 
 ## 🛠️ What This Script Does
-- Verifies that it’s being run as root
-- Updates your system’s package list
-- Installs uxplay and imagemagick
-- Creates a new user called airplay with password airplay
-- Enables autologin for the airplay user using LightDM
-- Configures uxplay to run on system startup
+
+- Checks for root privileges
+- Updates system package lists
+- Installs `uxplay`, `imagemagick`, and required GStreamer plugins
+- Creates a dedicated `airplay` user with password `airplay` (change recommended)
+- Enables autologin for `airplay` user via LightDM
+- Configures `uxplay` to start automatically on login
+- Redirects `uxplay` logs to `/tmp/airplay.log`
+- Checks for conflicting autologin settings and warns if found
 - Hides all desktop icons for a clean AirPlay display
-- Sets a custom wallpaper saying “Airplay server enabled”
+- Disables display sleep and screen blanking
+- Sets a custom wallpaper displaying “Airplay server enabled”
+
+---
 
 ## 🔁 After Running
-Once the script completes:
 
-Reboot the system:
+Reboot the system to apply all changes:
 
 ```bash
 sudo reboot
 ```
-On reboot, the system will auto-login as the airplay user and automatically start the AirPlay receiver.
+
+On reboot:
+
+- The system will autologin as the `airplay` user
+- `uxplay` will start automatically, streaming AirPlay content
+- Logs from `uxplay` will be available at `/tmp/airplay.log`
+
+---
 
 ## 🔐 Security Note
-The user airplay is created with a default password (airplay). For production or public-facing devices, you should change this password:
+
+The `airplay` user is created with a default password (`airplay`). For security, especially on public or production devices, **change this password** immediately:
 
 ```bash
 sudo passwd airplay
 ```
 
-## 🧹 To Uninstall
+---
 
-Manual steps required:
+## 🧹 Uninstall / Cleanup
+
+To remove the AirPlay setup, run:
 
 ```bash
 sudo deluser --remove-home airplay
@@ -65,3 +89,18 @@ sudo apt-get remove --purge uxplay imagemagick
 sudo rm /etc/xdg/autostart/uxplay.desktop
 sudo rm /etc/lightdm/lightdm.conf.d/50-airplay.conf
 ```
+
+---
+
+## 📝 Troubleshooting
+
+- If you encounter issues with autologin, check for conflicting settings in `/etc/lightdm/lightdm.conf` or other files under `/etc/lightdm/lightdm.conf.d/`.
+- View AirPlay logs here for debugging:
+
+```bash
+cat /tmp/airplay.log
+```
+
+---
+
+Let me know if you want me to do anything else!
