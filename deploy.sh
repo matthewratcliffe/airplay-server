@@ -8,7 +8,7 @@ if [[ "$REQUIRE_PIN" =~ ^[Yy]$ ]]; then
   while true; do
     read -rp "📟 Enter 4-digit static PIN: " STATIC_PIN
     if [[ "$STATIC_PIN" =~ ^[0-9]{4}$ ]]; then
-      UXPIN="-pin$STATIC_PIN"
+      UXPIN="-pin[$STATIC_PIN]"
       PIN_DISPLAY="PIN $STATIC_PIN"
       break
     else
