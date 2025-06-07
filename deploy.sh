@@ -70,8 +70,33 @@ user-session=xubuntu
 EOF
 echo "✅ Autologin configured."
 
-# 7) Create XFCE setup script for user configuration
-echo "[7/10] Creating XFCE setup script for user 'airplay'..."
+# 7) Disable display sleep and configure power button behavior
+echo "[7/10] Disabling display sleep and configuring power button behavior..."
+
+# Disable DPMS and screen blanking at X11 level
+mkdir -p /etc/X11/xorg.conf.d
+cat <<EOF > /etc/X11/xorg.conf.d/10-monitor.conf
+Section "Monitor"
+    Identifier "Monitor0"
+    Option "DPMS" "false"
+EndSection
+
+Section "ServerFlags"
+    Option "BlankTime" "0"
+    Option "StandbyTime" "0"
+    Option "SuspendTime" "0"
+    Option "OffTime" "0"
+EndSection
+EOF
+echo "✅ X11 display power saving disabled."
+
+# Set power button to shutdown
+sed -i 's/^#*HandlePowerKey=.*/HandlePowerKey=poweroff/' /etc/systemd/logind.conf
+systemctl restart systemd-logind
+echo "✅ Power button set to shutdown."
+
+# 8) Create XFCE setup script for user configuration
+echo "[8/10] Creating XFCE setup script for user 'airplay'..."
 
 WALLPAPER_PATH="/home/airplay/Pictures/airplay_wallpaper.png"
 
@@ -91,7 +116,11 @@ xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s false
 xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-removable -s false
 xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-volumes -s false
 
-# Disable display sleep and screen blanking
+# Disable screen blanking and power saving
+xset s off
+xset -dpms
+xset s noblank
+
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/blank-on-ac -s 0
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/sleep-display-ac -s 0
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lock-on-suspend -s false
@@ -102,7 +131,6 @@ EOF
 chmod +x /home/airplay/airplay-xfce-setup.sh
 chown airplay:airplay /home/airplay/airplay-xfce-setup.sh
 
-# Create autostart entry
 cat <<EOF > /home/airplay/.config/autostart/airplay-xfce-setup.desktop
 [Desktop Entry]
 Type=Application
@@ -117,8 +145,8 @@ EOF
 chown airplay:airplay /home/airplay/.config/autostart/airplay-xfce-setup.desktop
 echo "✅ XFCE desktop setup configured."
 
-# 8) Configure unclutter to auto-hide cursor
-echo "[8/10] Creating autostart entry for unclutter (auto-hide cursor)..."
+# 9) Configure unclutter to auto-hide cursor
+echo "[9/10] Creating autostart entry for unclutter (auto-hide cursor)..."
 
 cat <<EOF > /home/airplay/.config/autostart/unclutter.desktop
 [Desktop Entry]
@@ -134,10 +162,12 @@ EOF
 chown airplay:airplay /home/airplay/.config/autostart/unclutter.desktop
 echo "✅ Cursor auto-hide configured."
 
-# 9) Create wallpaper image
-echo "[9/10] Creating wallpaper image..."
-convert -size 1920x1080 xc:black -gravity center -pointsize 48 \
-  -fill white -annotate +0+0 "Airplay server enabled" \
+# 10) Create wallpaper image
+echo "[10/10] Creating wallpaper image..."
+convert -size 1920x1080 xc:black \
+  -gravity center -pointsize 48 -fill white \
+  -annotate +0-60 "Airplay server enabled" \
+  -annotate +0+20 "$AIRPLAY_NAME" \
   "$WALLPAPER_PATH"
 chown airplay:airplay "$WALLPAPER_PATH"
 echo "✅ Wallpaper image created."
