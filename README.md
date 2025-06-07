@@ -11,7 +11,7 @@ This project sets up an **AirPlay receiver** on a Xubuntu system using `uxplay`.
 
 ## 📋 Requirements
 
-- Xubuntu (tested on 22.04+) [https://xubuntu.org/download/](Download) | [https://xubuntu.github.io/xubuntu-docs/user/C/installation.html](Install Guide)
+- Xubuntu (tested on 22.04+) [Download](https://xubuntu.org/download/) | [Install Guide](https://xubuntu.github.io/xubuntu-docs/user/C/installation.html)
 - Internet connection
 - Sudo privileges
 - A machine you can dedicate to this purpose
