@@ -2,6 +2,11 @@
 
 This project sets up an **AirPlay receiver** on a Xubuntu system using `uxplay`. It configures a dedicated user account, autologin, and a clean display environment tailored for AirPlay use.
 
+> ⚠️ **Warning:**  
+> This script will take over the machine and dedicate it exclusively as an AirPlay server.  
+> It configures autologin, disables desktop features, and schedules automatic shutdowns.  
+> **If you do not want your system to be fully dedicated for this purpose, do NOT run this script.**
+
 ---
 
 ## 📋 Requirements
