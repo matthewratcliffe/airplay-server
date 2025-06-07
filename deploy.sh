@@ -21,21 +21,21 @@ echo "[2/12] Updating package list..."
 apt-get update
 echo "✅ Package list updated."
 
-# 3) Install uxplay and dependencies
+# 3) Install required packages
 echo "[3/12] Installing uxplay and dependencies..."
 apt-get install -y uxplay imagemagick unclutter \
   gstreamer1.0-plugins-bad gstreamer1.0-plugins-good \
   gstreamer1.0-plugins-ugly gstreamer1.0-libav
 echo "✅ Packages installed."
 
-# 4) Remove screen blanking tools
-echo "[4/12] Removing interfering screensavers..."
+# 4) Remove interfering screen savers
+echo "[4/12] Removing screensaver packages..."
 apt-get purge -y xscreensaver light-locker || true
 rm -f /home/airplay/.config/autostart/xscreensaver.desktop
 rm -f /home/airplay/.config/autostart/light-locker.desktop
-echo "✅ Removed xscreensaver/light-locker if present."
+echo "✅ Removed screensaver/autolock interference."
 
-# 5) Configure uxplay to autostart
+# 5) Autostart uxplay
 echo "[5/12] Creating uxplay autostart entry..."
 cat <<EOF > /etc/xdg/autostart/uxplay.desktop
 [Desktop Entry]
@@ -47,7 +47,7 @@ X-GNOME-Autostart-enabled=true
 Name=UxPlay
 Comment=Start UxPlay AirPlay Receiver
 EOF
-echo "✅ uxplay autostart created."
+echo "✅ uxplay autostart entry created."
 
 # 6) Create 'airplay' user
 echo "[6/12] Creating user 'airplay'..."
@@ -59,8 +59,8 @@ else
   echo "✅ User 'airplay' created."
 fi
 
-# 7) Setup LightDM autologin
-echo "[7/12] Configuring LightDM autologin..."
+# 7) Configure LightDM autologin
+echo "[7/12] Setting up LightDM autologin..."
 LIGHTDM_CONF="/etc/lightdm/lightdm.conf.d/50-airplay.conf"
 mkdir -p "$(dirname "$LIGHTDM_CONF")"
 
@@ -71,10 +71,10 @@ autologin-user-timeout=0
 user-session=xubuntu
 xserver-command=X -s 0 -dpms
 EOF
-echo "✅ LightDM autologin and xserver command configured."
+echo "✅ LightDM autologin configured."
 
-# 8) Configure XFCE autostart and no-sleep setup
-echo "[8/12] Creating XFCE setup script..."
+# 8) Create XFCE config setup
+echo "[8/12] Configuring XFCE display and power settings..."
 WALLPAPER_PATH="/home/airplay/Pictures/airplay_wallpaper.png"
 sudo -u airplay mkdir -p /home/airplay/.config/autostart
 sudo -u airplay mkdir -p /home/airplay/Pictures
@@ -82,7 +82,7 @@ sudo -u airplay mkdir -p /home/airplay/Pictures
 cat <<EOF > /home/airplay/airplay-xfce-setup.sh
 #!/bin/bash
 
-# Set wallpaper
+# Set wallpaper with two lines
 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-path -s "$WALLPAPER_PATH"
 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-style -s 3
 
@@ -92,14 +92,17 @@ xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s false
 xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-removable -s false
 xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-volumes -s false
 
-# Disable XFCE power manager actions
+# Disable power manager sleep/blanking
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/blank-on-ac -s 0
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/blank-on-battery -s 0
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/sleep-display-ac -s 0
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lock-on-suspend -s false
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/sleep-display-battery -s 0
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-on-ac -s 0
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-on-battery -s 0
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lock-screen-suspend-hibernate -s false
-xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/blank-on-suspend -s false
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lock-on-suspend -s false
 
-# Disable screen blanking and power saving (must be in X session)
+# Disable screen saver / display blanking (fallback)
 xset s off
 xset s noblank
 xset -dpms
@@ -108,6 +111,7 @@ EOF
 chmod +x /home/airplay/airplay-xfce-setup.sh
 chown airplay:airplay /home/airplay/airplay-xfce-setup.sh
 
+# Autostart script
 cat <<EOF > /home/airplay/.config/autostart/airplay-xfce-setup.desktop
 [Desktop Entry]
 Type=Application
@@ -116,14 +120,14 @@ Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 Name=Airplay XFCE Config
-Comment=Configure desktop on login
+Comment=Configure XFCE session for kiosk use
 EOF
 
 chown airplay:airplay /home/airplay/.config/autostart/airplay-xfce-setup.desktop
-echo "✅ XFCE power settings and display behavior configured."
+echo "✅ XFCE configuration script ready."
 
-# 9) Configure unclutter
-echo "[9/12] Creating unclutter autostart entry..."
+# 9) Autohide cursor with unclutter
+echo "[9/12] Setting up unclutter..."
 cat <<EOF > /home/airplay/.config/autostart/unclutter.desktop
 [Desktop Entry]
 Type=Application
@@ -132,24 +136,25 @@ Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 Name=Unclutter
-Comment=Auto-hide mouse cursor after 3 seconds
+Comment=Auto-hide mouse cursor
 EOF
 chown airplay:airplay /home/airplay/.config/autostart/unclutter.desktop
 echo "✅ Unclutter configured."
 
-# 10) Generate wallpaper with AirPlay name
+# 10) Create wallpaper image
 echo "[10/12] Creating wallpaper image..."
 convert -size 1920x1080 xc:black \
   -gravity center -pointsize 48 -fill white -annotate +0-30 "Airplay server enabled" \
   -gravity center -pointsize 36 -fill white -annotate +0+30 "$AIRPLAY_NAME" \
   "$WALLPAPER_PATH"
 chown airplay:airplay "$WALLPAPER_PATH"
-echo "✅ Wallpaper image created."
+echo "✅ Wallpaper created."
 
-# 11) Configure power button to shutdown
-echo "[11/12] Configuring power button to shutdown..."
+# 11) Power button action
+echo "[11/12] Setting power button to shutdown..."
 sed -i 's/^#*HandlePowerKey=.*/HandlePowerKey=poweroff/' /etc/systemd/logind.conf
 systemctl restart systemd-logind
-echo "✅ Power button set to shutdown."
+echo "✅ Power button will shut down."
 
-echo "[12/12] Setup complete! Reboot to apply all changes."
+# 12) Done
+echo "🎉 Setup complete! Please reboot to apply all changes."
