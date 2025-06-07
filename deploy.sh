@@ -9,11 +9,17 @@ if ! [[ "$SHUTDOWN_HOURS" =~ ^[0-9]+$ ]]; then
   SHUTDOWN_HOURS=0
 fi
 
+AUTO_SHUTDOWN_TEXT=""
 if [ "$SHUTDOWN_HOURS" -gt 0 ]; then
   echo "⏳ Scheduling automatic shutdown $SHUTDOWN_HOURS hours after boot..."
 
   # Convert hours to seconds for systemd timer
   let SHUTDOWN_SECONDS=SHUTDOWN_HOURS*3600
+
+  # Calculate shutdown date/time (current time + hours)
+  SHUTDOWN_TIMESTAMP=$(date -d "+$SHUTDOWN_HOURS hours" +"%d/%m/%Y @ %H:%M")
+
+  AUTO_SHUTDOWN_TEXT="Will auto shutdown at $SHUTDOWN_TIMESTAMP"
 
   # Create systemd service to shutdown
   cat <<EOF > /etc/systemd/system/auto-shutdown.service
@@ -190,12 +196,22 @@ EOF
 chown airplay:airplay /home/airplay/.config/autostart/unclutter.desktop
 echo "✅ Cursor auto-hide configured."
 
-# 9) Create wallpaper image with AirPlay server name in second line
+# 9) Create wallpaper image with AirPlay server name and optional shutdown info
 echo "[9/10] Creating wallpaper image..."
-convert -size 1920x1080 xc:black -gravity center -pointsize 48 \
-  -fill white -annotate +0-40 "Airplay server enabled" \
-  -pointsize 36 -annotate +0+40 "$AIRPLAY_NAME" \
-  "$WALLPAPER_PATH"
+
+if [ -n "$AUTO_SHUTDOWN_TEXT" ]; then
+  convert -size 1920x1080 xc:black -gravity center \
+    -pointsize 48 -fill white -annotate +0-80 "Airplay server enabled" \
+    -pointsize 36 -annotate +0+0 "$AIRPLAY_NAME" \
+    -pointsize 28 -annotate +0+80 "$AUTO_SHUTDOWN_TEXT" \
+    "$WALLPAPER_PATH"
+else
+  convert -size 1920x1080 xc:black -gravity center \
+    -pointsize 48 -fill white -annotate +0-40 "Airplay server enabled" \
+    -pointsize 36 -annotate +0+40 "$AIRPLAY_NAME" \
+    "$WALLPAPER_PATH"
+fi
+
 chown airplay:airplay "$WALLPAPER_PATH"
 echo "✅ Wallpaper image created."
 
