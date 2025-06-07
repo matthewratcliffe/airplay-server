@@ -112,11 +112,12 @@ cat <<EOF > /home/airplay/airplay-xfce-setup.sh
 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-path -s "$WALLPAPER_PATH"
 xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/image-style -s 3
 
-# Hide desktop icons
+# Hide desktop icons + panel
 xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -s false
 xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s false
 xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-removable -s false
 xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-volumes -s false
+xfconf-query -c xfce4-panel -p /panels/panel-1/autohide-behaviour -s 4
 
 # Disable display sleep and screen blanking
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/blank-on-ac -s 0
