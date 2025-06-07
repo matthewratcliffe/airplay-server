@@ -46,10 +46,11 @@ sudo bash deploy.sh
 - Enables autologin for `airplay` user via LightDM
 - Configures `uxplay` to start automatically on login
 - Redirects `uxplay` logs to `/tmp/airplay.log`
-- Checks for conflicting autologin settings and warns if found
+- Schedules automatic shutdown on user login (if enabled during setup)
 - Hides all desktop icons for a clean AirPlay display
 - Disables display sleep and screen blanking
-- Sets a custom wallpaper displaying “Airplay server enabled”
+- Sets a custom wallpaper displaying “Airplay server enabled” and scheduled shutdown time
+- Replaces the xubuntu logo with "Airplay Server"
 
 ---
 
@@ -63,9 +64,18 @@ sudo reboot
 
 On reboot:
 
-- The system will autologin as the `airplay` user
-- `uxplay` will start automatically, streaming AirPlay content
-- Logs from `uxplay` will be available at `/tmp/airplay.log`
+- The system will autologin as the airplay user
+- uxplay will start automatically, streaming AirPlay content
+- The auto shutdown timer will be scheduled on login (if enabled)
+- Logs from uxplay will be available at /tmp/airplay.log
+
+---
+
+## ⏰ Auto Shutdown
+
+During setup, you can enable an automatic shutdown timer that will trigger a system shutdown after a specified number of hours. This timer is scheduled each time the airplay user logs in, ensuring the system shuts down even after reboots.
+
+The scheduled shutdown time is displayed on the custom wallpaper.
 
 ---
 
@@ -88,6 +98,8 @@ sudo deluser --remove-home airplay
 sudo apt-get remove --purge uxplay imagemagick
 sudo rm /etc/xdg/autostart/uxplay.desktop
 sudo rm /etc/lightdm/lightdm.conf.d/50-airplay.conf
+sudo rm /home/airplay/auto-shutdown.sh
+sudo rm /home/airplay/.config/autostart/auto-shutdown.desktop
 ```
 
 ---
@@ -101,6 +113,3 @@ sudo rm /etc/lightdm/lightdm.conf.d/50-airplay.conf
 cat /tmp/airplay.log
 ```
 
----
-
-Let me know if you want me to do anything else!
