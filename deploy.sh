@@ -99,7 +99,7 @@ sudo -u airplay mkdir -p /home/airplay/Pictures
 # Build wallpaper text lines
 WALLPAPER_LINE2="$AIRPLAY_NAME"
 if [[ "$AUTO_SHUTDOWN" == "y" ]]; then
-  SHUTDOWN_DISPLAY_TIME=$(date -d "+$SHUTDOWN_HOURS hours" +"%d/%m/%Y @ %I:%M %p")
+  SHUTDOWN_DISPLAY_TIME=$(date -d "+$SHUTDOWN_HOURS hours" +"%-d/%-m/%Y @ %-l:%M %p")
   WALLPAPER_LINE3="Will auto shutdown at $SHUTDOWN_DISPLAY_TIME"
 else
   WALLPAPER_LINE3=""
