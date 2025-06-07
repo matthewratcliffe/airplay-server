@@ -101,6 +101,7 @@ xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-on-ac -s 
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-on-battery -s 0
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lock-on-suspend -s false
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lock-screen-suspend-hibernate -s false
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/power-button-action -s 4
 
 # Fallback settings using xset
 xset s off        # Disable screen saver
