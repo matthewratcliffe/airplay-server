@@ -19,9 +19,6 @@ if [[ "$AUTO_SHUTDOWN" == "y" || "$AUTO_SHUTDOWN" == "yes" ]]; then
     AUTO_SHUTDOWN="n"
   else
     echo "✅ Auto shutdown enabled after $SHUTDOWN_HOURS hour(s)."
-    # Schedule shutdown
-    shutdown_time=$(date -d "+$SHUTDOWN_HOURS hours" +"%Y-%m-%d %H:%M:%S")
-    shutdown -h +$((SHUTDOWN_HOURS * 60)) &
   fi
 else
   AUTO_SHUTDOWN="n"
@@ -130,7 +127,7 @@ EOF
 chmod +x /home/airplay/airplay-xfce-setup.sh
 chown airplay:airplay /home/airplay/airplay-xfce-setup.sh
 
-# Create autostart entry
+# Create autostart entry for XFCE setup
 cat <<EOF > /home/airplay/.config/autostart/airplay-xfce-setup.desktop
 [Desktop Entry]
 Type=Application
@@ -179,7 +176,7 @@ fi
 chown airplay:airplay "$WALLPAPER_PATH"
 echo "✅ Wallpaper image created."
 
-# 10) Replace Plymouth theme logo with custom "Airplay Server" image (keep spinner)
+# 10) Back up Plymouth theme and replace logo
 echo "[10/11] Backing up Plymouth theme and replacing logo..."
 
 PLYMOUTH_THEME_DIR="/usr/share/plymouth/themes/xubuntu-logo"
@@ -192,13 +189,11 @@ else
   echo "ℹ️ Plymouth theme backup already exists. Skipping backup."
 fi
 
-# Create custom Airplay Server logo PNG, size similar to original (usually ~400x150)
 CUSTOM_LOGO="/tmp/airplay-server-logo.png"
 convert -size 400x150 xc:none -gravity center \
   -pointsize 48 -fill white -annotate +0+0 "Airplay Server" \
   "$CUSTOM_LOGO"
 
-# Replace the existing logo image (commonly named xubuntu-logo.png)
 LOGO_PATH="$PLYMOUTH_THEME_DIR/logo.png"
 if [ -f "$LOGO_PATH" ]; then
   cp "$CUSTOM_LOGO" "$LOGO_PATH"
@@ -207,14 +202,50 @@ else
   echo "⚠️ Plymouth logo image not found at $LOGO_PATH. Skipping logo replacement."
 fi
 
-# Update initramfs so Plymouth theme updates apply
 echo "Updating initramfs..."
 update-initramfs -u
 echo "✅ initramfs updated."
 
+# 11) Create auto-shutdown script for airplay user (runs at login)
+echo "[11/11] Creating auto-shutdown script for user login..."
+
+cat <<EOF > /home/airplay/auto-shutdown.sh
+#!/bin/bash
+AUTO_SHUTDOWN="$AUTO_SHUTDOWN"
+SHUTDOWN_HOURS="$SHUTDOWN_HOURS"
+
+if [[ "\$AUTO_SHUTDOWN" == "y" ]]; then
+  shutdown_minutes=\$((SHUTDOWN_HOURS * 60))
+  echo "Scheduling shutdown in \$SHUTDOWN_HOURS hour(s) at user login..."
+  sudo /sbin/shutdown -h +\$shutdown_minutes
+fi
+EOF
+
+chmod +x /home/airplay/auto-shutdown.sh
+chown airplay:airplay /home/airplay/auto-shutdown.sh
+
+cat <<EOF > /home/airplay/.config/autostart/auto-shutdown.desktop
+[Desktop Entry]
+Type=Application
+Exec=/home/airplay/auto-shutdown.sh
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Auto Shutdown Scheduler
+Comment=Schedule shutdown on login
+EOF
+
+chown airplay:airplay /home/airplay/.config/autostart/auto-shutdown.desktop
+echo "✅ Auto-shutdown scheduled on user login."
+
+# 12) Setup sudoers to allow passwordless shutdown for 'airplay'
+echo "[*] Setting sudoers for passwordless shutdown for user 'airplay'..."
+echo 'airplay ALL=(ALL) NOPASSWD: /sbin/shutdown' > /etc/sudoers.d/airplay-shutdown
+chmod 440 /etc/sudoers.d/airplay-shutdown
+echo "✅ Sudoers updated."
+
 echo "🎉 Setup complete! Please reboot the system to apply all changes."
 
-# Ask if user wants to reboot now
 read -rp "🔄 Do you want to reboot now? (y/N): " REBOOT_NOW
 REBOOT_NOW=${REBOOT_NOW,,} # lowercase
 if [[ "$REBOOT_NOW" == "y" || "$REBOOT_NOW" == "yes" ]]; then
