@@ -213,3 +213,14 @@ update-initramfs -u
 echo "✅ initramfs updated."
 
 echo "🎉 Setup complete! Please reboot the system to apply all changes."
+
+# Ask if user wants to reboot now
+read -rp "🔄 Do you want to reboot now? (y/N): " REBOOT_NOW
+REBOOT_NOW=${REBOOT_NOW,,} # lowercase
+if [[ "$REBOOT_NOW" == "y" || "$REBOOT_NOW" == "yes" ]]; then
+  echo "Rebooting now..."
+  reboot
+else
+  echo "Exiting without reboot. Remember to reboot later to apply changes."
+  exit 0
+fi
