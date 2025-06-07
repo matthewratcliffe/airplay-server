@@ -163,12 +163,12 @@ echo "✅ Cursor auto-hide configured."
 echo "[9/11] Creating wallpaper image..."
 if [[ -z "$WALLPAPER_LINE3" ]]; then
   convert -size 1920x1080 xc:black -gravity center \
-    -pointsize 48 -fill white -annotate +0-80 "Airplay server enabled" \
+    -pointsize 48 -fill white -annotate +0-80 "Airplay Receiver Enabled" \
     -pointsize 36 -annotate +0+10 "$WALLPAPER_LINE2" \
     "$WALLPAPER_PATH"
 else
   convert -size 1920x1080 xc:black -gravity center \
-    -pointsize 48 -fill white -annotate +0-100 "Airplay server enabled" \
+    -pointsize 48 -fill white -annotate +0-100 "Airplay Receiver Enabled" \
     -pointsize 36 -annotate +0+10 "$WALLPAPER_LINE2" \
     -pointsize 28 -annotate +0+60 "$WALLPAPER_LINE3" \
     "$WALLPAPER_PATH"
@@ -189,15 +189,15 @@ else
   echo "ℹ️ Plymouth theme backup already exists. Skipping backup."
 fi
 
-CUSTOM_LOGO="/tmp/airplay-server-logo.png"
+CUSTOM_LOGO="/tmp/airplay-receiver-logo.png"
 convert -size 400x150 xc:none -gravity center \
-  -pointsize 48 -fill white -annotate +0+0 "Airplay Server" \
+  -pointsize 48 -fill white -annotate +0+0 "Airplay Receiver" \
   "$CUSTOM_LOGO"
 
 LOGO_PATH="$PLYMOUTH_THEME_DIR/logo.png"
 if [ -f "$LOGO_PATH" ]; then
   cp "$CUSTOM_LOGO" "$LOGO_PATH"
-  echo "✅ Plymouth logo replaced with custom Airplay Server logo."
+  echo "✅ Plymouth logo replaced with custom Airplay Receiver logo."
 else
   echo "⚠️ Plymouth logo image not found at $LOGO_PATH. Skipping logo replacement."
 fi
