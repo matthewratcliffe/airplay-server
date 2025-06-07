@@ -16,8 +16,8 @@ if [ "$SHUTDOWN_HOURS" -gt 0 ]; then
   # Convert hours to seconds for systemd timer
   let SHUTDOWN_SECONDS=SHUTDOWN_HOURS*3600
 
-  # Calculate shutdown date/time (current time + hours)
-  SHUTDOWN_TIMESTAMP=$(date -d "+$SHUTDOWN_HOURS hours" +"%d/%m/%Y @ %H:%M")
+  # Calculate shutdown date/time (current time + hours) in 12-hour format with AM/PM
+  SHUTDOWN_TIMESTAMP=$(date -d "+$SHUTDOWN_HOURS hours" +"%d/%m/%Y @ %I:%M %p")
 
   AUTO_SHUTDOWN_TEXT="Will auto shutdown at $SHUTDOWN_TIMESTAMP"
 
