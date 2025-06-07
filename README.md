@@ -76,6 +76,28 @@ On reboot:
 
 ---
 
+## ⚡ Auto-Starting the PC
+
+To make your AirPlay server fully hands-free, consider one of the following ways to automatically power on the system each day:
+
+### ✅ Wake-on-LAN (WOL)
+- Enable **Wake-on-LAN** in your BIOS/UEFI settings.
+- Use another device on the same network to send a WOL magic packet.
+- This method requires the device to remain connected to power and the network while shut down.
+
+### ✅ Powerboard Timer (Recommended)
+- Use a **smart plug** or **powerboard timer** to supply power at a scheduled time each day.
+- Set your BIOS/UEFI to **"Power On After Power Loss"** or **"Restore on AC Power Loss"**.
+- The PC will automatically boot when power is restored.
+
+### ✅ Manual Power On
+- Simply press the power button each day to start the server manually.
+- This is the least automated method but requires no configuration.
+
+> 💡 **Tip:** For most kiosk or display use-cases, a powerboard timer combined with BIOS auto-boot is the most reliable and low-maintenance option.
+
+---
+
 ## ⏰ Auto Shutdown
 
 During setup, you can enable an automatic shutdown timer that will trigger a system shutdown after a specified number of hours. This timer is scheduled each time the airplay user logs in, ensuring the system shuts down even after reboots.
