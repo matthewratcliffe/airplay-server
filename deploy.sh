@@ -198,7 +198,7 @@ convert -size 400x150 xc:none -gravity center \
   "$CUSTOM_LOGO"
 
 # Replace the existing logo image (commonly named xubuntu-logo.png)
-LOGO_PATH="$PLYMOUTH_THEME_DIR/xubuntu-logo.png"
+LOGO_PATH="$PLYMOUTH_THEME_DIR/logo.png"
 if [ -f "$LOGO_PATH" ]; then
   cp "$CUSTOM_LOGO" "$LOGO_PATH"
   echo "✅ Plymouth logo replaced with custom Airplay Server logo."
