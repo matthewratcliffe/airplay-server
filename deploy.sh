@@ -1,58 +1,5 @@
 #!/bin/bash
 
-# Ask if user wants to auto shutdown after a specified number of hours
-read -rp "🕒 Enable automatic shutdown after how many hours? (Enter 0 to disable): " SHUTDOWN_HOURS
-
-# Validate input is a whole number >= 0
-if ! [[ "$SHUTDOWN_HOURS" =~ ^[0-9]+$ ]]; then
-  echo "⚠️ Invalid input. Disabling automatic shutdown."
-  SHUTDOWN_HOURS=0
-fi
-
-AUTO_SHUTDOWN_TEXT=""
-if [ "$SHUTDOWN_HOURS" -gt 0 ]; then
-  echo "⏳ Scheduling automatic shutdown $SHUTDOWN_HOURS hours after boot..."
-
-  # Convert hours to seconds for systemd timer
-  let SHUTDOWN_SECONDS=SHUTDOWN_HOURS*3600
-
-  # Calculate shutdown date/time (current time + hours) in 12-hour format with AM/PM
-  SHUTDOWN_TIMESTAMP=$(date -d "+$SHUTDOWN_HOURS hours" +"%d/%m/%Y @ %I:%M %p")
-
-  AUTO_SHUTDOWN_TEXT="Will auto shutdown at $SHUTDOWN_TIMESTAMP"
-
-  # Create systemd service to shutdown
-  cat <<EOF > /etc/systemd/system/auto-shutdown.service
-[Unit]
-Description=Automatic shutdown after $SHUTDOWN_HOURS hours
-
-[Service]
-Type=oneshot
-ExecStart=/sbin/shutdown -h now
-EOF
-
-  # Create systemd timer to trigger service after specified time since boot
-  cat <<EOF > /etc/systemd/system/auto-shutdown.timer
-[Unit]
-Description=Timer for automatic shutdown $SHUTDOWN_HOURS hours after boot
-
-[Timer]
-OnBootSec=${SHUTDOWN_SECONDS}s
-Unit=auto-shutdown.service
-
-[Install]
-WantedBy=timers.target
-EOF
-
-  # Reload systemd, enable and start timer
-  systemctl daemon-reload
-  systemctl enable --now auto-shutdown.timer
-
-  echo "✅ Auto shutdown timer installed and activated."
-else
-  echo "ℹ️ Automatic shutdown disabled."
-fi
-
 # 0) Ask for AirPlay display name (default to hostname)
 read -rp "🎛️ Enter AirPlay display name (default: system hostname): " AIRPLAY_NAME
 if [ -z "$AIRPLAY_NAME" ]; then
@@ -62,8 +9,26 @@ fi
 AIRPLAY_NAME="${AIRPLAY_NAME//[- ]/_}"
 echo "ℹ️ AirPlay display name set to: $AIRPLAY_NAME"
 
+# Ask if user wants auto shutdown
+read -rp "⚙️ Enable auto shutdown? (y/N): " AUTO_SHUTDOWN
+AUTO_SHUTDOWN=${AUTO_SHUTDOWN,,} # lowercase
+if [[ "$AUTO_SHUTDOWN" == "y" || "$AUTO_SHUTDOWN" == "yes" ]]; then
+  read -rp "⏰ Enter hours before shutdown (whole number): " SHUTDOWN_HOURS
+  if ! [[ "$SHUTDOWN_HOURS" =~ ^[0-9]+$ ]]; then
+    echo "❌ Invalid number. Skipping auto shutdown setup."
+    AUTO_SHUTDOWN="n"
+  else
+    echo "✅ Auto shutdown enabled after $SHUTDOWN_HOURS hour(s)."
+    # Schedule shutdown
+    shutdown_time=$(date -d "+$SHUTDOWN_HOURS hours" +"%Y-%m-%d %H:%M:%S")
+    shutdown -h +$((SHUTDOWN_HOURS * 60)) &
+  fi
+else
+  AUTO_SHUTDOWN="n"
+fi
+
 # 1) Check for sudo/root
-echo "[1/10] Checking for root permissions..."
+echo "[1/11] Checking for root permissions..."
 if [ "$(id -u)" -ne 0 ]; then
   echo "❌ This script must be run as root. Use sudo." >&2
   exit 1
@@ -71,19 +36,19 @@ fi
 echo "✅ Running as root."
 
 # 2) Update package list
-echo "[2/10] Updating package list..."
+echo "[2/11] Updating package list..."
 apt-get update
 echo "✅ Package list updated."
 
 # 3) Install uxplay, imagemagick, and unclutter
-echo "[3/10] Installing uxplay, imagemagick, and unclutter..."
+echo "[3/11] Installing uxplay, imagemagick, and unclutter..."
 apt-get install -y uxplay imagemagick unclutter \
   gstreamer1.0-plugins-bad gstreamer1.0-plugins-good \
   gstreamer1.0-plugins-ugly gstreamer1.0-libav
 echo "✅ Packages installed."
 
 # 4) Configure uxplay to run on startup and log to /tmp/airplay.log
-echo "[4/10] Creating uxplay autostart entry..."
+echo "[4/11] Creating uxplay autostart entry..."
 cat <<EOF > /etc/xdg/autostart/uxplay.desktop
 [Desktop Entry]
 Type=Application
@@ -97,7 +62,7 @@ EOF
 echo "✅ uxplay autostart configured with logging to /tmp/airplay.log"
 
 # 5) Create user 'airplay' with password 'airplay'
-echo "[5/10] Creating user 'airplay'..."
+echo "[5/11] Creating user 'airplay'..."
 if id "airplay" &>/dev/null; then
   echo "ℹ️ User 'airplay' already exists. Skipping creation."
 else
@@ -107,7 +72,7 @@ else
 fi
 
 # 6) Configure autologin for 'airplay' user in LightDM
-echo "[6/10] Configuring LightDM autologin for 'airplay'..."
+echo "[6/11] Configuring LightDM autologin for 'airplay'..."
 LIGHTDM_CONF="/etc/lightdm/lightdm.conf.d/50-airplay.conf"
 mkdir -p "$(dirname "$LIGHTDM_CONF")"
 
@@ -124,12 +89,21 @@ EOF
 echo "✅ Autologin configured."
 
 # 7) Create XFCE setup script for user configuration
-echo "[7/10] Creating XFCE setup script for user 'airplay'..."
+echo "[7/11] Creating XFCE setup script for user 'airplay'..."
 
 WALLPAPER_PATH="/home/airplay/Pictures/airplay_wallpaper.png"
 
 sudo -u airplay mkdir -p /home/airplay/.config/autostart
 sudo -u airplay mkdir -p /home/airplay/Pictures
+
+# Build wallpaper text lines
+WALLPAPER_LINE2="$AIRPLAY_NAME"
+if [[ "$AUTO_SHUTDOWN" == "y" ]]; then
+  SHUTDOWN_DISPLAY_TIME=$(date -d "+$SHUTDOWN_HOURS hours" +"%d/%m/%Y @ %I:%M %p")
+  WALLPAPER_LINE3="Will auto shutdown at $SHUTDOWN_DISPLAY_TIME"
+else
+  WALLPAPER_LINE3=""
+fi
 
 cat <<EOF > /home/airplay/airplay-xfce-setup.sh
 #!/bin/bash
@@ -146,25 +120,16 @@ xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-volumes -s false
 
 # Disable display sleep and screen blanking
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/blank-on-ac -s 0
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/blank-on-battery -s 0
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/dpms-enabled -s false
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/dpms-on-ac-sleep -s 0
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/dpms-on-battery-sleep -s 0
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-on-ac -s 0
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-on-battery -s 0
+xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/sleep-display-ac -s 0
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lock-on-suspend -s false
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lock-screen-suspend-hibernate -s false
-
-# Fallback settings using xset
-xset s off        # Disable screen saver
-xset s noblank    # Disable screen blanking
-xset -dpms        # Disable display power management (DPMS)
+xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/blank-on-suspend -s false
 EOF
 
 chmod +x /home/airplay/airplay-xfce-setup.sh
 chown airplay:airplay /home/airplay/airplay-xfce-setup.sh
 
-# Create autostart entry for the XFCE setup script
+# Create autostart entry
 cat <<EOF > /home/airplay/.config/autostart/airplay-xfce-setup.desktop
 [Desktop Entry]
 Type=Application
@@ -180,7 +145,7 @@ chown airplay:airplay /home/airplay/.config/autostart/airplay-xfce-setup.desktop
 echo "✅ XFCE desktop setup configured."
 
 # 8) Configure unclutter to auto-hide cursor
-echo "[8/10] Creating autostart entry for unclutter (auto-hide cursor)..."
+echo "[8/11] Creating autostart entry for unclutter (auto-hide cursor)..."
 
 cat <<EOF > /home/airplay/.config/autostart/unclutter.desktop
 [Desktop Entry]
@@ -196,23 +161,54 @@ EOF
 chown airplay:airplay /home/airplay/.config/autostart/unclutter.desktop
 echo "✅ Cursor auto-hide configured."
 
-# 9) Create wallpaper image with AirPlay server name and optional shutdown info
-echo "[9/10] Creating wallpaper image..."
-
-if [ -n "$AUTO_SHUTDOWN_TEXT" ]; then
+# 9) Create wallpaper image with 2 or 3 lines
+echo "[9/11] Creating wallpaper image..."
+if [[ -z "$WALLPAPER_LINE3" ]]; then
   convert -size 1920x1080 xc:black -gravity center \
     -pointsize 48 -fill white -annotate +0-80 "Airplay server enabled" \
-    -pointsize 36 -annotate +0+0 "$AIRPLAY_NAME" \
-    -pointsize 28 -annotate +0+80 "$AUTO_SHUTDOWN_TEXT" \
+    -pointsize 36 -annotate +0+10 "$WALLPAPER_LINE2" \
     "$WALLPAPER_PATH"
 else
   convert -size 1920x1080 xc:black -gravity center \
-    -pointsize 48 -fill white -annotate +0-40 "Airplay server enabled" \
-    -pointsize 36 -annotate +0+40 "$AIRPLAY_NAME" \
+    -pointsize 48 -fill white -annotate +0-100 "Airplay server enabled" \
+    -pointsize 36 -annotate +0+10 "$WALLPAPER_LINE2" \
+    -pointsize 28 -annotate +0+60 "$WALLPAPER_LINE3" \
     "$WALLPAPER_PATH"
 fi
-
 chown airplay:airplay "$WALLPAPER_PATH"
 echo "✅ Wallpaper image created."
 
-echo "🎉 Setup complete! Please reboot the system to apply changes."
+# 10) Replace Plymouth theme logo with custom "Airplay Server" image (keep spinner)
+echo "[10/11] Backing up Plymouth theme and replacing logo..."
+
+PLYMOUTH_THEME_DIR="/usr/share/plymouth/themes/xubuntu-logo"
+BACKUP_DIR="/usr/share/plymouth/themes/xubuntu-logo-backup"
+
+if [ ! -d "$BACKUP_DIR" ]; then
+  cp -r "$PLYMOUTH_THEME_DIR" "$BACKUP_DIR"
+  echo "✅ Plymouth theme backup created at $BACKUP_DIR"
+else
+  echo "ℹ️ Plymouth theme backup already exists. Skipping backup."
+fi
+
+# Create custom Airplay Server logo PNG, size similar to original (usually ~400x150)
+CUSTOM_LOGO="/tmp/airplay-server-logo.png"
+convert -size 400x150 xc:none -gravity center \
+  -pointsize 48 -fill white -annotate +0+0 "Airplay Server" \
+  "$CUSTOM_LOGO"
+
+# Replace the existing logo image (commonly named xubuntu-logo.png)
+LOGO_PATH="$PLYMOUTH_THEME_DIR/xubuntu-logo.png"
+if [ -f "$LOGO_PATH" ]; then
+  cp "$CUSTOM_LOGO" "$LOGO_PATH"
+  echo "✅ Plymouth logo replaced with custom Airplay Server logo."
+else
+  echo "⚠️ Plymouth logo image not found at $LOGO_PATH. Skipping logo replacement."
+fi
+
+# Update initramfs so Plymouth theme updates apply
+echo "Updating initramfs..."
+update-initramfs -u
+echo "✅ initramfs updated."
+
+echo "🎉 Setup complete! Please reboot the system to apply all changes."
