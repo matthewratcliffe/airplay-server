@@ -1,6 +1,6 @@
-# 🛰️ AirPlay Server Setup for Xubuntu
+# 🛰️ AirPlay Receiver Setup for Xubuntu
 
-This project sets up an **AirPlay receiver** on a Xubuntu system using `uxplay`. It configures a dedicated user account, autologin, and a clean display environment tailored for AirPlay use.
+This project sets up an **AirPlay receiver** on a Xubuntu system using `uxplay`. It configures a dedicated user account, autologin, and a clean display environment tailored & dedicated for AirPlay use.
 
 > ⚠️ **Warning:**  
 > This script will take over the machine and dedicate it exclusively as an AirPlay receiver.  
@@ -11,9 +11,10 @@ This project sets up an **AirPlay receiver** on a Xubuntu system using `uxplay`.
 
 ## 📋 Requirements
 
-- Xubuntu (tested on 22.04+)
+- Xubuntu (tested on 22.04+) [https://xubuntu.org/download/](Download) | [https://xubuntu.github.io/xubuntu-docs/user/C/installation.html](Install Guide)
 - Internet connection
 - Sudo privileges
+- A machine you can dedicate to this purpose
 
 ---
 
