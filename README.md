@@ -3,7 +3,7 @@
 This project sets up an **AirPlay receiver** on a Xubuntu system using `uxplay`. It configures a dedicated user account, autologin, and a clean display environment tailored for AirPlay use.
 
 > ⚠️ **Warning:**  
-> This script will take over the machine and dedicate it exclusively as an AirPlay server.  
+> This script will take over the machine and dedicate it exclusively as an AirPlay receiver.  
 > It configures autologin, disables desktop features, and schedules automatic shutdowns.  
 > **If you do not want your system to be fully dedicated for this purpose, do NOT run this script.**
 
@@ -54,8 +54,8 @@ sudo bash deploy.sh
 - Schedules automatic shutdown on user login (if enabled during setup)
 - Hides all desktop icons for a clean AirPlay display
 - Disables display sleep and screen blanking
-- Sets a custom wallpaper displaying “Airplay server enabled” and scheduled shutdown time
-- Replaces the xubuntu logo with "Airplay Server"
+- Sets a custom wallpaper displaying “Airplay Receiver enabled” and scheduled shutdown time
+- Replaces the xubuntu logo with "Airplay Receiver"
 
 ---
 
@@ -78,7 +78,7 @@ On reboot:
 
 ## ⚡ Auto-Starting the PC
 
-To make your AirPlay server fully hands-free, consider one of the following ways to automatically power on the system each day:
+To make your AirPlay receiver fully hands-free, consider one of the following ways to automatically power on the system each day:
 
 ### ✅ Wake-on-LAN (WOL)
 - Enable **Wake-on-LAN** in your BIOS/UEFI settings.
@@ -91,7 +91,7 @@ To make your AirPlay server fully hands-free, consider one of the following ways
 - The PC will automatically boot when power is restored.
 
 ### ✅ Manual Power On
-- Simply press the power button each day to start the server manually.
+- Simply press the power button each day to start the receiver manually.
 - This is the least automated method but requires no configuration.
 
 > 💡 **Tip:** For most kiosk or display use-cases, a powerboard timer combined with BIOS auto-boot is the most reliable and low-maintenance option.
