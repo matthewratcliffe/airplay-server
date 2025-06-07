@@ -1,5 +1,52 @@
 #!/bin/bash
 
+# Ask if user wants to auto shutdown after a specified number of hours
+read -rp "🕒 Enable automatic shutdown after how many hours? (Enter 0 to disable): " SHUTDOWN_HOURS
+
+# Validate input is a whole number >= 0
+if ! [[ "$SHUTDOWN_HOURS" =~ ^[0-9]+$ ]]; then
+  echo "⚠️ Invalid input. Disabling automatic shutdown."
+  SHUTDOWN_HOURS=0
+fi
+
+if [ "$SHUTDOWN_HOURS" -gt 0 ]; then
+  echo "⏳ Scheduling automatic shutdown $SHUTDOWN_HOURS hours after boot..."
+
+  # Convert hours to seconds for systemd timer
+  let SHUTDOWN_SECONDS=SHUTDOWN_HOURS*3600
+
+  # Create systemd service to shutdown
+  cat <<EOF > /etc/systemd/system/auto-shutdown.service
+[Unit]
+Description=Automatic shutdown after $SHUTDOWN_HOURS hours
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/shutdown -h now
+EOF
+
+  # Create systemd timer to trigger service after specified time since boot
+  cat <<EOF > /etc/systemd/system/auto-shutdown.timer
+[Unit]
+Description=Timer for automatic shutdown $SHUTDOWN_HOURS hours after boot
+
+[Timer]
+OnBootSec=${SHUTDOWN_SECONDS}s
+Unit=auto-shutdown.service
+
+[Install]
+WantedBy=timers.target
+EOF
+
+  # Reload systemd, enable and start timer
+  systemctl daemon-reload
+  systemctl enable --now auto-shutdown.timer
+
+  echo "✅ Auto shutdown timer installed and activated."
+else
+  echo "ℹ️ Automatic shutdown disabled."
+fi
+
 # 0) Ask for AirPlay display name (default to hostname)
 read -rp "🎛️ Enter AirPlay display name (default: system hostname): " AIRPLAY_NAME
 if [ -z "$AIRPLAY_NAME" ]; then
@@ -101,7 +148,6 @@ xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-on-ac -s 
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/inactivity-on-battery -s 0
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lock-on-suspend -s false
 xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/lock-screen-suspend-hibernate -s false
-xfconf-query -c xfce4-power-manager -p /xfce4-power-manager/power-button-action -s 4
 
 # Fallback settings using xset
 xset s off        # Disable screen saver
